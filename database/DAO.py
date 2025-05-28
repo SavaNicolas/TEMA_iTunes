@@ -39,7 +39,7 @@ where a.AlbumId = t.AlbumId
 group by a.AlbumId
 having dTot > %s
     """
-        cursor.execute(query)
+        cursor.execute(query,(dMin,))
 
         for row in cursor:
             result.append(Album(**row))
@@ -49,14 +49,14 @@ having dTot > %s
         return result  # lista di nazioni
 
     @staticmethod
-    def getAllEdges(idMap):
+    def getAllEdges(nodi):
         conn = DBConnect.get_connection()
 
         result = []
 
         cursor = conn.cursor(dictionary=True)
         query = """
-                select distinct t1.AlbumId,t2.AlbumId
+                select DISTINCTROW t1.AlbumId as a1,t2.AlbumId as a2
 from track t1, track t2, playlisttrack p1,playlisttrack p2
 where t2.TrackId =p2.TrackId
 and t1.TrackId =p1.TrackId
@@ -67,8 +67,9 @@ and t1.AlbumId <t2.AlbumId
         cursor.execute(query)
 
         for row in cursor:
-            result.append((idMap[row["a1"]], idMap[row["a2"]])) #arco come tupla
-            # equivalente a fare (ArtObject(object_id= row["object_id"])
+            if row["a1"] in nodi and row["a2"] in nodi:
+                result.append((nodi[row["a1"]], nodi[row["a2"]]))
+
         cursor.close()
         conn.close()
         return result  # lista di nazioni
